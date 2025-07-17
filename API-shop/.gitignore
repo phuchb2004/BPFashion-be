@@ -1,0 +1,35 @@
+﻿# === Visual Studio ===
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# === Build results ===
+[Bb]in/
+[Oo]bj/
+*.dll
+*.exe
+
+# === NuGet ===
+*.nupkg
+packages/
+
+# === ASP.NET temp files ===
+**/App_Data/
+**/App_Start/
+**/Properties/
+
+# === Logs ===
+*.log
+
+# === Rider / JetBrains ===
+.idea/
+*.sln.iml
+
+# === Others ===
+*.vsidx
+*.dbmdl
+*.cache
+*.pdb
+*.mdb
