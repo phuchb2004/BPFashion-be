@@ -14,11 +14,14 @@
 # === NuGet ===
 *.nupkg
 packages/
+project.lock.json
+project.fragment.lock.json
 
 # === ASP.NET temp files ===
 **/App_Data/
 **/App_Start/
 **/Properties/
+*.dbmdl
 
 # === Logs ===
 *.log
@@ -29,7 +32,11 @@ packages/
 
 # === Others ===
 *.vsidx
-*.dbmdl
+*.db
+*.db-shm
+*.db-wal
 *.cache
 *.pdb
 *.mdb
+*.ldf
+*.ndf
