@@ -52,6 +52,37 @@ namespace API_shop.Models
         public string password { get; set; }
     }
 
+    public class RegisterRequest
+    {
+        [Required]
+        public string userName { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string email { get; set; }
+
+        [Required]
+        [MinLength(6)]
+        public string password { get; set; }
+
+        [Required]
+        [Compare("Password")]
+        public string confirmPassword { get; set; }
+
+        [Required]
+        public string fullName { get; set; }
+
+        public string phone { get; set; }
+
+        public string role { get; set; } = "User"; // Mặc định là User
+
+        public DateTime? dob { get; set; }
+
+        public string address { get; set; }
+
+        public string gender { get; set; }
+    }
+
     public class GoogleLoginRequest
     {
         public string Credential { get; set; }

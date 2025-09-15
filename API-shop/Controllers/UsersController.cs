@@ -1,6 +1,7 @@
 ﻿using API_shop.Models;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -130,7 +131,7 @@ namespace API_shop.Controllers
         }
 
         [HttpPost("Login")]
-        public IActionResult Login(LoginRequest loginRequest)
+        public IActionResult Login(Models.LoginRequest loginRequest)
         {
             var user = _context.Users.FirstOrDefault(u => u.email == loginRequest.email);
             if (user == null || user.password != loginRequest.password)
@@ -166,12 +167,116 @@ namespace API_shop.Controllers
                 user = new
                 {
                     userId = user.userId,
+                    fullName = user.fullName,
+                    userName = user.userName,
                     email = user.email,
                     password = user.password,
-                    role = user.role
+                    dob = user.dob,
+                    phone = user.phone,
+                    gender = user.gender,
+                    role = user.role,
                 }
             });
         }
+
+        [HttpPost("Register")]
+        public IActionResult Register(Models.RegisterRequest registerRequest)
+        {
+            try
+            {
+                // Kiểm tra request null
+                if (registerRequest == null)
+                {
+                    return BadRequest(new { message = "Thông tin đăng ký không hợp lệ" });
+                }
+
+                // Kiểm tra email đã tồn tại
+                var existingUser = _context.Users.FirstOrDefault(u => u.email == registerRequest.email);
+                if (existingUser != null)
+                {
+                    return Conflict(new { message = "Email đã được sử dụng" });
+                }
+
+                // Kiểm tra username đã tồn tại
+                var existingUserName = _context.Users.FirstOrDefault(u => u.userName == registerRequest.userName);
+                if (existingUserName != null)
+                {
+                    return Conflict(new { message = "Tên đăng nhập đã được sử dụng" });
+                }
+
+                // Kiểm tra mật khẩu
+                if (string.IsNullOrWhiteSpace(registerRequest.password) || registerRequest.password.Length < 6)
+                {
+                    return BadRequest(new { message = "Mật khẩu phải có ít nhất 6 ký tự" });
+                }
+
+                // Kiểm tra xác nhận mật khẩu
+                if (registerRequest.password != registerRequest.confirmPassword)
+                {
+                    return BadRequest(new { message = "Mật khẩu xác nhận không khớp" });
+                }
+
+                // Tạo user mới
+                var user = new User
+                {
+                    userName = registerRequest.userName,
+                    email = registerRequest.email,
+                    password = registerRequest.password, // Trong thực tế nên hash password
+                    fullName = registerRequest.fullName,
+                    phone = registerRequest.phone,
+                    role = registerRequest.role ?? "User", // Mặc định là User (theo dữ liệu mẫu)
+                    dob = (DateTime)registerRequest.dob,
+                    address = registerRequest.address,
+                    gender = registerRequest.gender
+                };
+
+                _context.Users.Add(user);
+                _context.SaveChanges();
+
+                // Tạo token JWT
+                var claims = new[]
+                {
+            new Claim(JwtRegisteredClaimNames.Sub, user.email),
+            new Claim("role", user.role),
+            new Claim("userId", user.userId.ToString()),
+            new Claim("userName", user.userName),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hoangbaophucjoeytribbianimonkeydluffy15102004"));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(
+                    issuer: "http://localhost:7134",
+                    audience: "http://localhost:7134",
+                    claims: claims,
+                    expires: DateTime.Now.AddHours(1),
+                    signingCredentials: creds
+                );
+
+                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+                return Ok(new
+                {
+                    message = $"Đăng ký thành công! Chào mừng {user.fullName}",
+                    token = tokenString,
+                    user = new
+                    {
+                        userId = user.userId,
+                        userName = user.userName,
+                        email = user.email,
+                        fullName = user.fullName,
+                        role = user.role,
+                        phone = user.phone
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server khi đăng ký", error = ex.Message });
+            }
+        }
+
 
         //[HttpPost("LoginGoogle")]
         //public async Task<IActionResult> LoginGoogle([FromBody] GoogleLoginRequest req)
