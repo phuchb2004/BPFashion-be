@@ -74,7 +74,7 @@ namespace API_shop.Models
 
         public string phone { get; set; }
 
-        public string role { get; set; } = "User"; // Mặc định là User
+        public string role { get; set; } = "User";
 
         public DateTime? dob { get; set; }
 

@@ -20,21 +20,28 @@ namespace API_shop.Controllers
         public IActionResult GetAllProducts()
         {
             var products = _context.Products
-                .Include(p => p.brand)
                 .Include(p => p.category)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.Color)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.Size)
                 .Select(p => new
                 {
                     p.productId,
                     p.productName,
                     p.description,
-                    p.price,
-                    p.stockQuantity,
                     p.imageUrl,
                     p.material,
-                    p.size,
                     p.createdAt,
-                    BrandName = p.brand.brandName,
-                    CategoryName = p.category.categoryName
+                    CategoryName = p.category.categoryName,
+                    Variants = p.ProductVariants.Select(v => new
+                    {
+                        v.variantId,
+                        v.price,
+                        v.stockQuantity,
+                        Color = v.Color.colorName,
+                        Size = v.Size.sizeName
+                    })
                 })
                 .ToList();
 
@@ -45,22 +52,31 @@ namespace API_shop.Controllers
         public IActionResult GetProductById(int id)
         {
             var product = _context.Products
-                .Include(p => p.brand)
-                .Include(p => p.category)
                 .Where(p => p.productId == id)
+                .Include(p => p.category)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.Color)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.Size)
                 .Select(p => new
                 {
                     p.productId,
                     p.productName,
                     p.description,
-                    p.price,
-                    p.stockQuantity,
                     p.imageUrl,
                     p.material,
-                    p.size,
                     p.createdAt,
-                    BrandName = p.brand.brandName,
-                    CategoryName = p.category.categoryName
+                    CategoryName = p.category.categoryName,
+                    Variants = p.ProductVariants.Select(v => new
+                    {
+                        v.variantId,
+                        v.price,
+                        v.stockQuantity,
+                        colorId = v.colorId,
+                        ColorName = v.Color.colorName,
+                        sizeId = v.sizeId,
+                        SizeName = v.Size.sizeName
+                    })
                 })
                 .FirstOrDefault();
 

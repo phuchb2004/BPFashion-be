@@ -1,12 +1,11 @@
 ﻿using API_shop.Models;
-using Google.Apis.Auth;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using BCrypt.Net;
 
 namespace API_shop.Controllers
 {
@@ -14,9 +13,14 @@ namespace API_shop.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
+
+        private static class UserRoles
+        {
+            public const string Admin = "Admin";
+            public const string User = "User";
+        }
 
         public UsersController(AppDbContext context, IConfiguration config)
         {
@@ -25,11 +29,15 @@ namespace API_shop.Controllers
         }
 
         [HttpPost("CreateUser")]
-        public IActionResult CreateUser(CreateUser req)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUser req)
         {
-            if (req == null)
+            var isConflict = await _context.Users.AnyAsync(u => u.email == req.email || u.userName == req.userName);
+            if (isConflict)
             {
-                return BadRequest("Invalid infomation");
+                return Conflict(new { message = "Email hoặc tên đăng nhập đã được sử dụng" });
             }
 
             var user = new User
@@ -37,32 +45,45 @@ namespace API_shop.Controllers
                 userName = req.userName,
                 password = req.password,
                 email = req.email,
-                fullName = req.fullName,  
+                fullName = req.fullName,
                 dob = req.dob,
                 address = req.address,
                 phone = req.phone,
                 gender = req.gender,
-                role = req.role
+                role = req.role,
+                createAt = DateTime.UtcNow
             };
 
             _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return Ok(new { message = $"Welcome {user.fullName} !!!"});
+            return CreatedAtAction(nameof(GetUserInfo), new { id = user.userId }, new
+            {
+                message = "Thêm người dùng thành công!",
+                userId = user.userId
+            });
         }
 
         [HttpPut("UpdateUser/{id}")]
-        public IActionResult UpdateUser(int id, [FromBody] UpdateUser req)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUser req)
         {
-            var userToUpdate = _context.Users.Find(id);
+            var userToUpdate = await _context.Users.FindAsync(id);
             if (userToUpdate == null)
             {
-                return NotFound(new { message = "No user found" });
+                return NotFound(new { message = "Không tìm thấy người dùng" });
+            }
+
+            var isConflict = await _context.Users.AnyAsync(u => u.userId != id && (u.email == req.email || u.userName == req.userName));
+            if (isConflict)
+            {
+                return Conflict(new { message = "Email hoặc Tên đăng nhập đã được sử dụng bởi người dùng khác" });
             }
 
             userToUpdate.userName = req.userName;
             userToUpdate.email = req.email;
-            userToUpdate.password = req.password;
             userToUpdate.fullName = req.fullName;
             userToUpdate.dob = req.dob;
             userToUpdate.address = req.address;
@@ -70,293 +91,123 @@ namespace API_shop.Controllers
             userToUpdate.gender = req.gender;
             userToUpdate.role = req.role;
 
-            _context.SaveChanges();
+            if (!string.IsNullOrEmpty(req.password))
+            {
+                userToUpdate.password = req.password;
+            }
 
-            return Ok(new { message = $"{userToUpdate.fullName} is updated"});
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
         [HttpDelete("DeleteUser/{id}")]
-        public IActionResult DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var userToDelete = _context.Users.Find(id);
+            var userToDelete = await _context.Users.FindAsync(id);
             if (userToDelete == null)
             {
-                return NotFound(new { message = "No user found" });
+                return NotFound(new { message = "Không tìm thấy người dùng" });
+            }
+
+            if (userToDelete.role == UserRoles.Admin && userToDelete.userId == 1)
+            {
+                return BadRequest(new { message = "Không thể xóa admin chính" });
             }
 
             _context.Users.Remove(userToDelete);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return Ok(new { message = "User Deleted" });
+            return Ok(new { message = "Xóa người dùng thành công" });
         }
 
         [HttpGet("GetUserInfo/{id}")]
-        public IActionResult GetUserInfo(int id)
+        public async Task<IActionResult> GetUserInfo(int id)
         {
-            var userToGet = _context.Users.Find(id);
-            if (userToGet == null)
+            var user = await _context.Users
+                .Select(u => new
+                {
+                    u.userId,
+                    u.userName,
+                    u.email,
+                    u.fullName,
+                    u.dob,
+                    u.phone,
+                    u.gender,
+                    u.role,
+                    u.address,
+                    u.createAt
+                })
+                .FirstOrDefaultAsync(u => u.userId == id);
+
+            if (user == null)
             {
-                return NotFound(new {message = "No user found" });
+                return NotFound(new { message = "Không tìm thấy người dùng" });
             }
 
-            var userInfo = new User
-            {
-                userName = userToGet.userName,
-                email = userToGet.email,
-                password = userToGet.password
-            };
-
-            return Ok(new {message = $"{userToGet.fullName}'s infomation", 
-                userToGet.userId, 
-                userToGet.userName,
-                userToGet.email, 
-                userToGet.password, 
-                userToGet.dob, 
-                userToGet.phone, 
-                userToGet.gender,
-                userToGet.role
-            });
+            return Ok(new { message = "Thông tin người dùng", user });
         }
 
         [HttpGet("GetAllUser")]
-        public IActionResult GetAllUser()
+        public async Task<IActionResult> GetAllUser()
         {
-            var user = _context.Users.ToList();
-            if (user.Count == 0)
-            {
-                return NotFound(new { message = "List user is empty" });
-            }
+            var users = await _context.Users
+                .OrderByDescending(u => u.createAt)
+                .Select(u => new
+                {
+                    u.userId,
+                    u.userName,
+                    u.email,
+                    u.fullName,
+                    u.dob,
+                    u.phone,
+                    u.gender,
+                    u.role,
+                    u.address,
+                    u.createAt
+                })
+                .ToListAsync();
 
-            return Ok(new { message = "All user infomation", user });
+            return Ok(new { message = "Danh sách người dùng", users });
         }
 
         [HttpPost("Login")]
-        public IActionResult Login(Models.LoginRequest loginRequest)
+        public async Task<IActionResult> Login([FromBody] Models.LoginRequest loginRequest)
         {
-            var user = _context.Users.FirstOrDefault(u => u.email == loginRequest.email);
-            if (user == null || user.password != loginRequest.password)
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.email == loginRequest.email);
+
+            if (user == null || loginRequest.password != user.password)
             {
-                return Unauthorized(new { message = "Sai tên đăng nhập hoặc mật khẩu" });
+                return Unauthorized(new { message = "Sai email hoặc mật khẩu" });
             }
 
-            var claims = new[]
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.email),
-                new Claim("role", user.role),
-                new Claim("userId", user.userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.userId.ToString()),
+                    new Claim(ClaimTypes.Email, user.email),
+                    new Claim(ClaimTypes.Name, user.fullName),
+                    new Claim(ClaimTypes.Role, user.role)
+                }),
+                Expires = DateTime.UtcNow.AddHours(24),
+                Issuer = _config["Jwt:Issuer"],
+                Audience = _config["Jwt:Audience"],
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hoangbaophucjoeytribbianimonkeydluffy15102004"));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: "http://localhost:7134",
-                audience: "http://localhost:7134",
-                claims: claims,
-                expires: DateTime.Now.AddHours(1),
-                signingCredentials: creds
-            );
-
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
 
             return Ok(new
             {
-                message = $"Chào mừng {user.fullName}",
+                message = $"Đăng nhập thành công! Chào mừng {user.fullName}",
                 token = tokenString,
-                user = new
-                {
-                    userId = user.userId,
-                    fullName = user.fullName,
-                    userName = user.userName,
-                    email = user.email,
-                    password = user.password,
-                    dob = user.dob,
-                    phone = user.phone,
-                    gender = user.gender,
-                    role = user.role,
-                }
+                user = new { user.userId, user.fullName, user.userName, user.email, user.role, user.phone, user.gender }
             });
         }
-
-        [HttpPost("Register")]
-        public IActionResult Register(Models.RegisterRequest registerRequest)
-        {
-            try
-            {
-                // Kiểm tra request null
-                if (registerRequest == null)
-                {
-                    return BadRequest(new { message = "Thông tin đăng ký không hợp lệ" });
-                }
-
-                // Kiểm tra email đã tồn tại
-                var existingUser = _context.Users.FirstOrDefault(u => u.email == registerRequest.email);
-                if (existingUser != null)
-                {
-                    return Conflict(new { message = "Email đã được sử dụng" });
-                }
-
-                // Kiểm tra username đã tồn tại
-                var existingUserName = _context.Users.FirstOrDefault(u => u.userName == registerRequest.userName);
-                if (existingUserName != null)
-                {
-                    return Conflict(new { message = "Tên đăng nhập đã được sử dụng" });
-                }
-
-                // Kiểm tra mật khẩu
-                if (string.IsNullOrWhiteSpace(registerRequest.password) || registerRequest.password.Length < 6)
-                {
-                    return BadRequest(new { message = "Mật khẩu phải có ít nhất 6 ký tự" });
-                }
-
-                // Kiểm tra xác nhận mật khẩu
-                if (registerRequest.password != registerRequest.confirmPassword)
-                {
-                    return BadRequest(new { message = "Mật khẩu xác nhận không khớp" });
-                }
-
-                // Tạo user mới
-                var user = new User
-                {
-                    userName = registerRequest.userName,
-                    email = registerRequest.email,
-                    password = registerRequest.password, // Trong thực tế nên hash password
-                    fullName = registerRequest.fullName,
-                    phone = registerRequest.phone,
-                    role = registerRequest.role ?? "User", // Mặc định là User (theo dữ liệu mẫu)
-                    dob = (DateTime)registerRequest.dob,
-                    address = registerRequest.address,
-                    gender = registerRequest.gender
-                };
-
-                _context.Users.Add(user);
-                _context.SaveChanges();
-
-                // Tạo token JWT
-                var claims = new[]
-                {
-            new Claim(JwtRegisteredClaimNames.Sub, user.email),
-            new Claim("role", user.role),
-            new Claim("userId", user.userId.ToString()),
-            new Claim("userName", user.userName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hoangbaophucjoeytribbianimonkeydluffy15102004"));
-                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-                var token = new JwtSecurityToken(
-                    issuer: "http://localhost:7134",
-                    audience: "http://localhost:7134",
-                    claims: claims,
-                    expires: DateTime.Now.AddHours(1),
-                    signingCredentials: creds
-                );
-
-                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
-                return Ok(new
-                {
-                    message = $"Đăng ký thành công! Chào mừng {user.fullName}",
-                    token = tokenString,
-                    user = new
-                    {
-                        userId = user.userId,
-                        userName = user.userName,
-                        email = user.email,
-                        fullName = user.fullName,
-                        role = user.role,
-                        phone = user.phone
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Lỗi server khi đăng ký", error = ex.Message });
-            }
-        }
-
-
-        //[HttpPost("LoginGoogle")]
-        //public async Task<IActionResult> LoginGoogle([FromBody] GoogleLoginRequest req)
-        //{
-        //    try
-        //    {
-        //        if (string.IsNullOrEmpty(req.Credential))
-        //        {
-        //            return BadRequest(new { message = "Thiếu Google token" });
-        //        }
-
-        //        var settings = new GoogleJsonWebSignature.ValidationSettings()
-        //        {
-        //            Audience = new[] { _config["Google:ClientId"] }
-        //        };
-
-        //        var payload = await GoogleJsonWebSignature.ValidateAsync(req.Credential, settings);
-
-        //        if (payload == null)
-        //        {
-        //            return Unauthorized(new { message = "Google token không hợp lệ" });
-        //        }
-
-        //        var user = _context.Users.FirstOrDefault(u => u.Email == payload.Email);
-        //        if (user == null)
-        //        {
-        //            user = new User
-        //            {
-        //                email = payload.Email,
-        //                fullName = payload.Name,
-        //                password = null,
-        //                role = "User",
-        //                phone = null,
-        //                //DOB = null,
-        //                gender = null
-        //            };
-
-        //            _context.Users.Add(user);
-        //            await _context.SaveChangesAsync();
-        //        }
-
-        //        var claims = new[]
-        //        {
-        //            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-        //            new Claim("role", user.Role),
-        //            new Claim("fullname", user.FullName ?? ""),
-        //            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        //        };
-
-        //        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-        //        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        //        var token = new JwtSecurityToken(
-        //            issuer: _config["Jwt:Issuer"],
-        //            audience: _config["Jwt:Audience"],
-        //            claims: claims,
-        //            expires: DateTime.Now.AddHours(1),
-        //            signingCredentials: creds
-        //        );
-
-        //        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-        //        return Ok(new
-        //        {
-        //            message = "Đăng nhập Google thành công",
-        //            token = jwt,
-        //            user = new
-        //            {
-        //                user.Id,
-        //                user.Email,
-        //                user.FullName,
-        //                user.Role
-        //            }
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new { message = "Lỗi đăng nhập Google", error = ex.Message });
-        //    }
-        //}
-
     }
 }

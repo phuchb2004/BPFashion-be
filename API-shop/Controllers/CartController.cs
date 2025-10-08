@@ -21,7 +21,14 @@ namespace API_shop.Controllers
         {
             var cart = _context.Carts
                 .Include(c => c.cartItems)
-                .ThenInclude(ci => ci.product)
+                    .ThenInclude(ci => ci.ProductVariant)
+                        .ThenInclude(pv => pv.Product)
+                .Include(c => c.cartItems)
+                    .ThenInclude(ci => ci.ProductVariant)
+                        .ThenInclude(pv => pv.Color)
+                .Include(c => c.cartItems)
+                    .ThenInclude(ci => ci.ProductVariant)
+                        .ThenInclude(pv => pv.Size)
                 .FirstOrDefault(c => c.userId == userId);
 
             if (cart == null)
@@ -32,46 +39,40 @@ namespace API_shop.Controllers
             var result = cart.cartItems.Select(ci => new
             {
                 ci.cartItemId,
-                ci.productId,
+                ci.variantId,
                 ci.quantity,
-                Product = new
+                ProductVariant = new
                 {
-                    ci.product.productId,
-                    ci.product.productName,
-                    ci.product.description,
-                    ci.product.price,
-                    ci.product.stockQuantity,
-                    ci.product.imageUrl,
-                    ci.product.categoryId,
-                    ci.product.brandId,
-                    ci.product.material,
-                    ci.product.size,
-                    ci.product.createdAt
+                    ci.ProductVariant.Product.productName,
+                    ci.ProductVariant.Product.imageUrl,
+                    ci.ProductVariant.price,
+                    Color = ci.ProductVariant.Color.colorName,
+                    Size = ci.ProductVariant.Size.sizeName,
                 }
             });
             return Ok(result);
         }
 
         [HttpPost("AddToCart")]
-        public IActionResult AddToCart([FromBody] CartItemDto dto)
+        public IActionResult AddToCart([FromBody] AddToCartDto dto)
         {
-            var cart = _context.Carts
-                .FirstOrDefault(c => c.userId == dto.userId);
+            var variant = _context.ProductVariants.Find(dto.variantId);
+            if (variant == null || variant.stockQuantity < dto.quantity)
+            {
+                return BadRequest(new { message = "Sản phẩm không tồn tại hoặc không đủ số lượng." });
+            }
+
+            var cart = _context.Carts.FirstOrDefault(c => c.userId == dto.userId);
 
             if (cart == null)
             {
-                cart = new Cart
-                {
-                    userId = dto.userId,
-                    createAt = DateTime.Now,
-                    cartItems = new List<CartItem>()
-                };
+                cart = new Cart { userId = dto.userId, createAt = DateTime.Now };
                 _context.Carts.Add(cart);
                 _context.SaveChanges();
             }
 
-            var existingItem = _context.Set<CartItem>()
-                .FirstOrDefault(ci => ci.cartId == cart.cartId && ci.productId == dto.productId);
+            var existingItem = _context.CartItems
+                .FirstOrDefault(ci => ci.cartId == cart.cartId && ci.variantId == dto.variantId);
 
             if (existingItem != null)
             {
@@ -82,10 +83,10 @@ namespace API_shop.Controllers
                 var newItem = new CartItem
                 {
                     cartId = cart.cartId,
-                    productId = dto.productId,
+                    variantId = dto.variantId,
                     quantity = dto.quantity
                 };
-                _context.Add(newItem);
+                _context.CartItems.Add(newItem);
             }
             _context.SaveChanges();
 
@@ -95,13 +96,20 @@ namespace API_shop.Controllers
         [HttpPut("UpdateCart/{cartItemId}")]
         public IActionResult UpdateQuantity(int cartItemId, [FromBody] int quantity)
         {
-            var item = _context.Set<CartItem>().Find(cartItemId);
+            var item = _context.CartItems.Find(cartItemId);
             if (item == null)
             {
                 return NotFound();
             }
-            
-            item.quantity = quantity;
+
+            if (quantity <= 0)
+            {
+                _context.Remove(item);
+            }
+            else
+            {
+                item.quantity = quantity;
+            }
             _context.SaveChanges();
 
             return Ok(new { message = "Cập nhật số lượng thành công" });
@@ -110,7 +118,7 @@ namespace API_shop.Controllers
         [HttpDelete("DeleteItem/{cartItemId}")]
         public IActionResult RemoveFromCart(int cartItemId)
         {
-            var item = _context.Set<CartItem>().Find(cartItemId);
+            var item = _context.CartItems.Find(cartItemId);
             if (item == null)
             {
                 return NotFound();
@@ -124,10 +132,10 @@ namespace API_shop.Controllers
 
     }
 
-    public class CartItemDto
+    public class AddToCartDto
     {
         public int userId { get; set; }
-        public int productId { get; set; }
+        public int variantId { get; set; }
         public int quantity { get; set; }
     }
 }
