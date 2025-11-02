@@ -16,11 +16,22 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowCredentials()
+            .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
     });
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.AddPolicy("Development", policy =>
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+    }
 });
 
 //JWT Authentication
@@ -37,10 +48,10 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = "http://localhost:7134",
-        ValidAudience = "http://localhost:7134",
+        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "http://localhost:5234",
+        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "http://localhost:5173",
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("hoangbaophucjoeytribbianimonkeydluffy15102004")
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "hoangbaophucjoeytribbianimonkeydluffy15102004")
         )
     };
 
@@ -67,8 +78,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseCors("AllowFrontend");
+// CORS must be before UseHttpsRedirection and UseAuthentication
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("Development");
+}
+else
+{
+    app.UseCors("AllowFrontend");
+}
+
+// Only use HTTPS redirection in production
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 

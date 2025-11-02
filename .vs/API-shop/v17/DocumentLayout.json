@@ -1,22 +1,18 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\",
+  "WorkspaceRootPath": "D:\\PHUCHB\\PHUCHB_CODE\\pdu\\DO-AN-TOT-NGHIEP\\BPFashion-be\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|d:\\phuchb\\phuchb_code\\do-an-tot-nghiep\\bpfashion-be\\api-shop\\models\\productvariant.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|solutionrelative:api-shop\\models\\productvariant.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|d:\\phuchb\\phuchb_code\\pdu\\do-an-tot-nghiep\\bpfashion-be\\api-shop\\controllers\\productscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|solutionrelative:api-shop\\controllers\\productscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|d:\\phuchb\\phuchb_code\\do-an-tot-nghiep\\bpfashion-be\\api-shop\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|solutionrelative:api-shop\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|d:\\phuchb\\phuchb_code\\pdu\\do-an-tot-nghiep\\bpfashion-be\\api-shop\\models\\productdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|solutionrelative:api-shop\\models\\productdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|d:\\phuchb\\phuchb_code\\do-an-tot-nghiep\\bpfashion-be\\api-shop\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|solutionrelative:api-shop\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|d:\\phuchb\\phuchb_code\\do-an-tot-nghiep\\bpfashion-be\\api-shop\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|solutionrelative:api-shop\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|d:\\phuchb\\phuchb_code\\pdu\\do-an-tot-nghiep\\bpfashion-be\\api-shop\\models\\product.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0D3A2DC-3FC7-4FA5-8567-E7521969301D}|API-shop\\API-shop.csproj|solutionrelative:api-shop\\models\\product.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,59 +22,45 @@
       "DocumentGroups": [
         {
           "DockedHeight": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Program.cs",
-              "RelativeDocumentMoniker": "API-shop\\Program.cs",
-              "ToolTip": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Program.cs",
-              "RelativeToolTip": "API-shop\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAgAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-06T08:20:05.794Z",
-              "IsPinned": true,
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "ProductVariant.cs",
-              "DocumentMoniker": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Models\\ProductVariant.cs",
-              "RelativeDocumentMoniker": "API-shop\\Models\\ProductVariant.cs",
-              "ToolTip": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Models\\ProductVariant.cs",
-              "RelativeToolTip": "API-shop\\Models\\ProductVariant.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAuAAAAAAAAAA==",
+              "Title": "ProductsController.cs",
+              "DocumentMoniker": "D:\\PHUCHB\\PHUCHB_CODE\\pdu\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Controllers\\ProductsController.cs",
+              "RelativeDocumentMoniker": "API-shop\\Controllers\\ProductsController.cs",
+              "ToolTip": "D:\\PHUCHB\\PHUCHB_CODE\\pdu\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Controllers\\ProductsController.cs",
+              "RelativeToolTip": "API-shop\\Controllers\\ProductsController.cs",
+              "ViewState": "AgIAAFIAAAAAAAAAAAAqwIsAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T14:58:58.086Z",
+              "WhenOpened": "2025-11-02T14:58:23.132Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "UsersController.cs",
-              "DocumentMoniker": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Controllers\\UsersController.cs",
-              "RelativeDocumentMoniker": "API-shop\\Controllers\\UsersController.cs",
-              "ToolTip": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Controllers\\UsersController.cs",
-              "RelativeToolTip": "API-shop\\Controllers\\UsersController.cs",
-              "ViewState": "AgIAAFoAAAAAAAAAAAAQwBMAAAAJAAAAAAAAAA==",
+              "Title": "ProductDto.cs",
+              "DocumentMoniker": "D:\\PHUCHB\\PHUCHB_CODE\\pdu\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Models\\ProductDto.cs",
+              "RelativeDocumentMoniker": "API-shop\\Models\\ProductDto.cs",
+              "ToolTip": "D:\\PHUCHB\\PHUCHB_CODE\\pdu\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Models\\ProductDto.cs",
+              "RelativeToolTip": "API-shop\\Models\\ProductDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T14:48:38.912Z",
+              "WhenOpened": "2025-11-02T14:58:01.699Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "User.cs",
-              "DocumentMoniker": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Models\\User.cs",
-              "RelativeDocumentMoniker": "API-shop\\Models\\User.cs",
-              "ToolTip": "D:\\PHUCHB\\PHUCHB_CODE\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Models\\User.cs",
-              "RelativeToolTip": "API-shop\\Models\\User.cs",
-              "ViewState": "AgIAAEkAAAAAAAAAAAAmwFcAAAAuAAAAAAAAAA==",
+              "Title": "Product.cs",
+              "DocumentMoniker": "D:\\PHUCHB\\PHUCHB_CODE\\pdu\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Models\\Product.cs",
+              "RelativeDocumentMoniker": "API-shop\\Models\\Product.cs",
+              "ToolTip": "D:\\PHUCHB\\PHUCHB_CODE\\pdu\\DO-AN-TOT-NGHIEP\\BPFashion-be\\API-shop\\Models\\Product.cs",
+              "RelativeToolTip": "API-shop\\Models\\Product.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T14:46:49.223Z",
+              "WhenOpened": "2025-11-02T14:57:11.598Z",
               "EditorCaption": ""
             }
           ]

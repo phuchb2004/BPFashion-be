@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace API_shop.Controllers
 {
@@ -16,10 +18,51 @@ namespace API_shop.Controllers
             _context = context;
         }
 
-        [HttpGet("GetAllProducts")]
-        public IActionResult GetAllProducts()
+        [HttpGet("GetProductsByCategory/{categoryId}")]
+        public async Task<IActionResult> GetProductsByCategory(int categoryId)
         {
-            var products = _context.Products
+            var query = _context.Products
+                .Where(p => p.categoryId == categoryId)
+                .Include(p => p.category)
+        .Include(p => p.ProductVariants)
+          .ThenInclude(v => v.Color)
+        .Include(p => p.ProductVariants)
+          .ThenInclude(v => v.Size)
+        .Select(p => new
+        {
+            p.productId,
+            p.productName,
+            p.description,
+            p.imageUrl,
+            p.material,
+            p.createdAt,
+            CategoryName = p.category.categoryName,
+            p.price,
+
+            Variants = p.ProductVariants.Select(v => new
+            {
+                v.variantId,
+                v.price,
+                v.stockQuantity,
+                Color = v.Color.colorName,
+                Size = v.Size.sizeName
+            })
+        });
+
+            var products = await query.ToListAsync();
+
+            if (products == null || !products.Any())
+            {
+                return NotFound("No products found for this category.");
+            }
+
+            return Ok(products);
+        }
+
+        [HttpGet("GetProductsPaged")]
+        public async Task<IActionResult> GetProductsPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 8)
+        {
+            var query = _context.Products
                 .Include(p => p.category)
                 .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.Color)
@@ -34,6 +77,8 @@ namespace API_shop.Controllers
                     p.material,
                     p.createdAt,
                     CategoryName = p.category.categoryName,
+                    p.price,
+
                     Variants = p.ProductVariants.Select(v => new
                     {
                         v.variantId,
@@ -42,16 +87,22 @@ namespace API_shop.Controllers
                         Color = v.Color.colorName,
                         Size = v.Size.sizeName
                     })
-                })
-                .ToList();
+                });
 
-            return Ok(products);
+            var totalCount = await query.CountAsync();
+
+            var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(new { products = products, totalCount = totalCount });
         }
 
         [HttpGet("GetProductById/{id}")]
-        public IActionResult GetProductById(int id)
+        public async Task<IActionResult> GetProductById(int id)
         {
-            var product = _context.Products
+            var product = await _context.Products
                 .Where(p => p.productId == id)
                 .Include(p => p.category)
                 .Include(p => p.ProductVariants)
@@ -67,6 +118,8 @@ namespace API_shop.Controllers
                     p.material,
                     p.createdAt,
                     CategoryName = p.category.categoryName,
+                    p.price,
+
                     Variants = p.ProductVariants.Select(v => new
                     {
                         v.variantId,
@@ -78,7 +131,7 @@ namespace API_shop.Controllers
                         SizeName = v.Size.sizeName
                     })
                 })
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             if (product == null)
                 return NotFound();

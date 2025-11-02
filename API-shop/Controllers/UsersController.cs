@@ -209,5 +209,30 @@ namespace API_shop.Controllers
                 user = new { user.userId, user.fullName, user.userName, user.email, user.role, user.phone, user.gender }
             });
         }
+
+        [HttpPut("UpdatePassword/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdatePassword(int id, [FromBody] UpdatePasswordRequest req)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "Không tìm thấy người dùng" });
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(req.CurrentPassword, user.password))
+            {
+                return BadRequest(new { message = "Mật khẩu hiện tại không chính xác" });
+            }
+
+            user.password = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Cập nhật mật khẩu thành công" });
+        }
     }
 }
