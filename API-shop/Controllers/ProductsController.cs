@@ -18,36 +18,55 @@ namespace API_shop.Controllers
             _context = context;
         }
 
+        [HttpGet("GetAllProducts")]
+        public async Task<IActionResult> GetAllProducts()
+        {
+            var products = await _context.Products
+                .Include(p => p.ProductVariants)
+                .Select(p => new
+                {
+                    p.productId,
+                    p.productName,
+                    p.imageUrl,
+                    price = p.ProductVariants.Any() ? p.ProductVariants.Min(v => v.price) : 0,
+                    stockQuantity = p.ProductVariants.Any() ? p.ProductVariants.Sum(v => v.stockQuantity) : 0,
+                    discount = 0 
+                })
+                .ToListAsync();
+
+            return Ok(products);
+        }
+
         [HttpGet("GetProductsByCategory/{categoryId}")]
         public async Task<IActionResult> GetProductsByCategory(int categoryId)
         {
-            var query = _context.Products
+            var query = _context.Products
                 .Where(p => p.categoryId == categoryId)
-                .Include(p => p.category)
-        .Include(p => p.ProductVariants)
-          .ThenInclude(v => v.Color)
-        .Include(p => p.ProductVariants)
-          .ThenInclude(v => v.Size)
-        .Select(p => new
-        {
-            p.productId,
-            p.productName,
-            p.description,
-            p.imageUrl,
-            p.material,
-            p.createdAt,
-            CategoryName = p.category.categoryName,
-            p.price,
+                .Include(p => p.category)
+                .Include(p => p.ProductVariants)
+                  .ThenInclude(v => v.Color)
+                .Include(p => p.ProductVariants)
+                  .ThenInclude(v => v.Size)
+                .Select(p => new
+                {
+                    p.productId,
+                    p.productName,
+                    p.description,
+                    p.imageUrl,
+                    p.material,
+                    p.createdAt,
+                    CategoryName = p.category.categoryName,
+                    price = p.ProductVariants.Any() ? p.ProductVariants.Min(v => v.price) : 0,
 
-            Variants = p.ProductVariants.Select(v => new
-            {
-                v.variantId,
-                v.price,
-                v.stockQuantity,
-                Color = v.Color.colorName,
-                Size = v.Size.sizeName
-            })
-        });
+                    Variants = p.ProductVariants.Select(v => new
+                    {
+                        v.variantId,
+                        v.price,
+                        v.stockQuantity,
+                        Color = v.Color.colorName,
+                        Size = v.Size.sizeName
+                    })
+                });
 
             var products = await query.ToListAsync();
 
@@ -57,7 +76,7 @@ namespace API_shop.Controllers
             }
 
             return Ok(products);
-        }
+        }
 
         [HttpGet("GetProductsPaged")]
         public async Task<IActionResult> GetProductsPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 8)
@@ -77,7 +96,7 @@ namespace API_shop.Controllers
                     p.material,
                     p.createdAt,
                     CategoryName = p.category.categoryName,
-                    p.price,
+                    price = p.ProductVariants.Any() ? p.ProductVariants.Min(v => v.price) : 0,
 
                     Variants = p.ProductVariants.Select(v => new
                     {
@@ -118,7 +137,7 @@ namespace API_shop.Controllers
                     p.material,
                     p.createdAt,
                     CategoryName = p.category.categoryName,
-                    p.price,
+                    price = p.ProductVariants.Any() ? p.ProductVariants.Min(v => v.price) : 0,
 
                     Variants = p.ProductVariants.Select(v => new
                     {

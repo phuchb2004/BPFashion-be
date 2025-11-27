@@ -11,7 +11,6 @@ namespace API_shop.Models
         public string material { get; set; }
         public int? categoryId { get; set; }
         public DateTime createdAt { get; set; }
-        public int price { get; set; }
         public virtual Category category { get; set; }
         public virtual ICollection<ProductVariant> ProductVariants { get; set; }
     }

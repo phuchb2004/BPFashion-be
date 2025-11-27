@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using API_shop.Models;
 using API_shop.Services;
+using System.Threading.Tasks;
 
 namespace API_shop.Controllers
 {
@@ -16,16 +17,17 @@ namespace API_shop.Controllers
         }
 
         [HttpPost("process")]
-        public IActionResult ProcessMessage([FromBody] ChatMessage message)
+        public async Task<IActionResult> ProcessMessage([FromBody] ChatMessage message)
         {
-            if (string.IsNullOrWhiteSpace(message.Text))
+            if (message == null || string.IsNullOrWhiteSpace(message.Text))
             {
-                return BadRequest("Message text cannot be empty.");
+                return BadRequest("Nội dung tin nhắn không được để trống.");
             }
 
             try
             {
-                Task.Delay(500 + new Random().Next(500)).Wait();
+                // Giả lập độ trễ để tạo cảm giác bot đang gõ
+                await Task.Delay(500 + new Random().Next(500));
 
                 var response = _chatbotService.ProcessMessage(message.Text);
                 response.Timestamp = DateTime.UtcNow;
@@ -34,7 +36,8 @@ namespace API_shop.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = "An internal server error occurred." });
+                // Log error here if needed
+                return StatusCode(500, new { error = "Đã xảy ra lỗi máy chủ." });
             }
         }
     }

@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using BCrypt.Net;
+using Google.Apis.Auth;
 
 namespace API_shop.Controllers
 {
@@ -205,6 +206,94 @@ namespace API_shop.Controllers
             return Ok(new
             {
                 message = $"Đăng nhập thành công! Chào mừng {user.fullName}",
+                token = tokenString,
+                user = new { user.userId, user.fullName, user.userName, user.email, user.role, user.phone, user.gender }
+            });
+        }
+
+        [HttpPost("LoginGoogle")]
+        [HttpPost("~/LoginGoogle")]
+        public async Task<IActionResult> LoginGoogle([FromBody] GoogleLoginRequest request, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(request?.Credential))
+            {
+                return BadRequest(new { message = "Thiếu mã xác thực của Google" });
+            }
+
+            var googleClientId = _config["Google:ClientId"];
+            if (string.IsNullOrWhiteSpace(googleClientId))
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Thiếu cấu hình Google ClientId" });
+            }
+
+            GoogleJsonWebSignature.Payload payload;
+            try
+            {
+                payload = await GoogleJsonWebSignature.ValidateAsync(
+                    request.Credential,
+                    new GoogleJsonWebSignature.ValidationSettings
+                    {
+                        Audience = new[] { googleClientId }
+                    });
+            }
+            catch (Exception)
+            {
+                return Unauthorized(new { message = "Token Google không hợp lệ" });
+            }
+
+            var email = payload.Email;
+            var fullName = payload.Name;
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Unauthorized(new { message = "Không lấy được email từ Google" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.email == email, cancellationToken);
+            if (user == null)
+            {
+                user = new User
+                {
+                    userName = $"google_{payload.Subject}",
+                    password = string.Empty,
+                    email = email,
+                    fullName = string.IsNullOrWhiteSpace(fullName) ? email : fullName,
+                    dob = DateTime.UtcNow,
+                    address = string.Empty,
+                    phone = string.Empty,
+                    gender = string.Empty,
+                    role = "User",
+                    createAt = DateTime.UtcNow
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.userId.ToString()),
+                    new Claim(ClaimTypes.Email, user.email),
+                    new Claim(ClaimTypes.Name, user.fullName),
+                    new Claim(ClaimTypes.Role, user.role)
+                }),
+                Expires = DateTime.UtcNow.AddHours(24),
+                Issuer = _config["Jwt:Issuer"],
+                Audience = _config["Jwt:Audience"],
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return Ok(new
+            {
+                message = $"Đăng nhập Google thành công! Chào mừng {user.fullName}",
                 token = tokenString,
                 user = new { user.userId, user.fullName, user.userName, user.email, user.role, user.phone, user.gender }
             });

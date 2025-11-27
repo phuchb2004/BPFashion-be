@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +65,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<ChatbotService>();
 
 var app = builder.Build();
+
+var supportedCultures = new[] { "en-US", "vi-VN" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("vi-VN")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+localizationOptions.RequestCultureProviders = new List<IRequestCultureProvider>
+{
+    new CookieRequestCultureProvider(),
+    new AcceptLanguageHeaderRequestCultureProvider()
+};
+app.UseRequestLocalization(localizationOptions);
 
 app.Use(async (context, next) =>
 {
