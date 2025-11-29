@@ -150,7 +150,8 @@ namespace API_shop.Controllers
                         colorId = v.colorId,
                         ColorName = v.Color.colorName,
                         sizeId = v.sizeId,
-                        SizeName = v.Size.sizeName
+                        SizeName = v.Size.sizeName,
+                        imageUrl = v.imageUrl
                     })
                 })
                 .FirstOrDefaultAsync();

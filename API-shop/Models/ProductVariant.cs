@@ -14,6 +14,7 @@ namespace API_shop.Models
         public virtual Product Product { get; set; }
         public virtual Color Color { get; set; }
         public virtual Size Size { get; set; }
+        public string? imageUrl { get; set; }
         public virtual ICollection<CartItem> CartItems { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
     }
