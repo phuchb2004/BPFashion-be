@@ -57,6 +57,7 @@ namespace API_shop.Controllers
                     p.createdAt,
                     CategoryName = p.category.categoryName,
                     price = p.ProductVariants.Any() ? p.ProductVariants.Min(v => v.price) : 0,
+                    totalStock = p.ProductVariants.Any() ? p.ProductVariants.Sum(v => v.stockQuantity) : 0,
 
                     Variants = p.ProductVariants.Select(v => new
                     {
@@ -97,6 +98,7 @@ namespace API_shop.Controllers
                     p.createdAt,
                     CategoryName = p.category.categoryName,
                     price = p.ProductVariants.Any() ? p.ProductVariants.Min(v => v.price) : 0,
+                    totalStock = p.ProductVariants.Any() ? p.ProductVariants.Sum(v => v.stockQuantity) : 0,
 
                     Variants = p.ProductVariants.Select(v => new
                     {
@@ -138,6 +140,7 @@ namespace API_shop.Controllers
                     p.createdAt,
                     CategoryName = p.category.categoryName,
                     price = p.ProductVariants.Any() ? p.ProductVariants.Min(v => v.price) : 0,
+                    totalStock = p.ProductVariants.Any() ? p.ProductVariants.Sum(v => v.stockQuantity) : 0,
 
                     Variants = p.ProductVariants.Select(v => new
                     {
